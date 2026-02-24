@@ -10,7 +10,8 @@ import Anthropic from '@anthropic-ai/sdk';
  * 주의: 쿠팡은 Akamai CDN으로 쿠키/세션 없는 서버 요청을 403 차단함.
  * Firecrawl만이 헤드리스 브라우저 + 쿠키 관리로 이를 우회할 수 있음.
  */
-// Vercel 함수 타임아웃: Firecrawl 5초 + Claude ~2초 여유 확보
+// Vercel Hobby 플랜: 함수 최대 실행 시간 10초 (maxDuration 설정과 무관하게 강제 적용)
+// 타임아웃 예산: Firecrawl ~4.5s (waitFor 2.5s + 네트워크) + Claude ~1.5s = ~6s (안전 마진 4s)
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
@@ -48,9 +49,10 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           url: productUrl,
           formats: ['rawHtml', 'markdown'],
-          waitFor: 5000,           // JS 렌더링 5초 대기 (쿠팡 가격 렌더링)
+          waitFor: 2500,           // 2.5초로 단축 — 쿠팡 JSON-LD/OG 메타는 SSR에 포함돼 JS 렌더링 불필요
           onlyMainContent: false,  // 사이드바 가격/스펙 포함
         }),
+        signal: AbortSignal.timeout(7000), // Firecrawl 행잉 방지 (7초 초과 시 강제 중단)
       });
 
       if (!fcRes.ok) {
