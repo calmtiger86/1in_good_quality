@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
           'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: productUrl, formats: ['html'] }),
+        body: JSON.stringify({ url: productUrl, formats: ['rawHtml'] }),
       });
 
       if (!fcRes.ok) {
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       }
 
       const fcData = await fcRes.json();
-      html = fcData?.data?.html ?? '';
+      html = fcData?.data?.rawHtml ?? '';
     } catch {
       return NextResponse.json(
         { error: '페이지를 가져올 수 없습니다. URL을 확인해 주세요.' },
