@@ -6,12 +6,12 @@
 ---
 
 ## 마지막 업데이트
-2026-02-24 — P0/P1/P2 전체 완료, 최초 git 커밋 대기
+2026-02-24 — P0/P1/P2 + Vercel 배포 전체 완료
 
 ---
 
 ## 현재 우선순위
-**P2-3** — 최초 git 커밋 (사용자 GitHub 레포 생성 후)
+**P3** — Python 에이전트 팀 구성 (scout → data → content → image → layout → qa → pack)
 
 ---
 
@@ -34,7 +34,7 @@
 ### P2 — 배포 시점 (완료 ✅)
 - [x] P2-1: `/.github/workflows/ci.yml` — CI 파이프라인
 - [x] P2-2: `/editor/vercel.json` — Vercel 배포 설정
-- [ ] P2-3: 최초 git 커밋 & GitHub 푸시 (사용자 확인 필요) ← **현재 여기**
+- [x] P2-3: 최초 git 커밋 & GitHub 푸시 (`8a53913`) + Vercel 배포 완료
 
 ### 추가 구현 (이번 세션)
 - [x] `editor/app/project/[id]/publish/page.tsx`:
@@ -44,6 +44,9 @@
   - AI 이미지 일괄/개별 생성 UI (`handleGenerateSingle`, `handleGenerateAll`)
   - 진행 상태 바, imagePrompt textarea
 - [x] ESLint 오류 5개 수정 → `npm run build` 통과
+- [x] `editor/public/assets/logo/` — 로고 PNG 2종 통합 (`ca26f93`)
+  - `publish/page.tsx`: renderSlideToBlob() drawImage 전환 (폴백 포함)
+  - `editor/[slide]/page.tsx`: renderToPNG() logo 분기 추가
 
 ---
 
@@ -54,14 +57,13 @@
 | `npm run type-check` | ✅ 오류 없음 |
 | `npm test` | ✅ 40개 통과 (3 suites) |
 | `npm run build` | ✅ 빌드 성공 (Warning만, Error 없음) |
+| Vercel 배포 | ✅ `https://1in-good-quality.vercel.app` |
 
 ---
 
-## 미구현 항목 (코드 외 작업)
+## 미구현 항목
 
-| 항목 | 이유 |
-|------|------|
-| `public/assets/logo/` 디렉토리 + PNG 2종 | 실제 이미지 파일 제작 필요 (`1in_logo_white.png`, `1in_logo_kraft.png`) |
+없음 — P3 에이전트 팀 구성만 남음
 
 ---
 
@@ -77,11 +79,14 @@
 ## 다음 세션 시작 순서
 1. 이 파일 읽기
 2. `CLAUDE.md` 확인 (기술 스택, 금지 패턴)
-3. P2-3 최초 커밋 — `git add` → `git commit` → `git push` (사용자 GitHub 레포 URL 필요)
+3. P3 Python 에이전트 팀 구성 시작 (`agent/` 디렉토리)
 
 ---
 
 ## 환경 상태
-- `.env.local`: 미생성 (`.env.example` 복사 후 실제 값 입력 필요)
-- Vercel 프로젝트: 미연결
-- git 커밋: 0개 (P2-3에서 최초 커밋 예정)
+- `.env.local`: 미생성 (`.env.example` 복사 후 실제 값 입력 필요, 로컬 개발용)
+- Vercel 프로젝트: ✅ 연결 완료 (`https://1in-good-quality.vercel.app`)
+- GitHub 레포: `https://github.com/calmtiger86/1in_good_quality`
+- git 커밋: 2개
+  - `8a53913` — 최초 커밋 (49파일)
+  - `ca26f93` — 로고 PNG 통합
