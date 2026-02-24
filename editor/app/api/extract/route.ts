@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
                     description: '이 제품의 주 타겟 고객층 (한 줄)',
                   },
                 },
-                required: ['name'],
+                required: ['name', 'price'],
               },
             },
           ],
@@ -227,6 +227,35 @@ export async function POST(req: NextRequest) {
 
       category = guessCategory(name, description);
       specs    = extractSpecs(html);
+    }
+
+    // ─── 가격 폴백 (항상 실행 — Claude가 name만 추출하고 price 누락 시 대응) ───
+    if (!price) {
+      const jsonLdForPrice = extractJsonLd(html);
+      if (jsonLdForPrice?.offers?.price) {
+        price = `₩${Number(jsonLdForPrice.offers.price).toLocaleString()}`;
+      }
+      if (!originalPrice && jsonLdForPrice?.offers?.priceSpecification?.price) {
+        originalPrice = `₩${Number(jsonLdForPrice.offers.priceSpecification.price).toLocaleString()}`;
+      }
+    }
+    if (!price) price = extractPrice(html);
+    if (!price && markdown) {
+      const pricePatterns = [
+        /[₩￦]\s*([\d,]+)/,          // ₩29,900 형식
+        /([\d,]{4,})\s*원/,           // 29,900원 형식
+        /[₩￦]?\s?([\d,]{4,})\s*원?/, // 범용 패턴
+      ];
+      for (const pat of pricePatterns) {
+        const m = markdown.match(pat);
+        if (m) {
+          const digits = m[1].replace(/,/g, '');
+          if (Number(digits) > 1000) { // 1,000원 이상만 (노이즈 제거)
+            price = `₩${Number(digits).toLocaleString()}`;
+            break;
+          }
+        }
+      }
     }
 
     // ─── 이미지 추출 (rawHtml OG 태그 기준, 항상 실행) ──
