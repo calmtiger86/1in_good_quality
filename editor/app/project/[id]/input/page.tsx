@@ -195,9 +195,11 @@ export default function InputPage() {
 
           {/* STEP 1: 제품 URL */}
           <section className={styles.section}>
-            <label className={styles.label}>STEP 1. 제품 URL</label>
+            <label className={styles.label} htmlFor="product-url">STEP 1. 제품 URL</label>
             <div className={styles.urlRow}>
               <input
+                id="product-url"
+                name="product-url"
                 type="url"
                 className={`input ${styles.urlInput}`}
                 placeholder="쿠팡 제품 URL을 붙여넣으세요"
@@ -222,8 +224,11 @@ export default function InputPage() {
               <label className={styles.label}>📦 제품 정보</label>
               <div className={styles.infoGrid}>
                 <div className={styles.infoField}>
-                  <span className={styles.infoLabel}>제품명</span>
+                  <label className={styles.infoLabel} htmlFor="product-name">제품명</label>
                   <input
+                    id="product-name"
+                    name="product-name"
+                    type="text"
                     className="input input--ko"
                     value={productInfo.name}
                     onChange={(e) => {
@@ -234,8 +239,11 @@ export default function InputPage() {
                   />
                 </div>
                 <div className={styles.infoField}>
-                  <span className={styles.infoLabel}>가격</span>
+                  <label className={styles.infoLabel} htmlFor="product-price">가격</label>
                   <input
+                    id="product-price"
+                    name="product-price"
+                    type="text"
                     className="input"
                     value={productInfo.price}
                     onChange={(e) => {
@@ -245,8 +253,10 @@ export default function InputPage() {
                   />
                 </div>
                 <div className={styles.infoField}>
-                  <span className={styles.infoLabel}>카테고리</span>
+                  <label className={styles.infoLabel} htmlFor="product-category">카테고리</label>
                   <select
+                    id="product-category"
+                    name="product-category"
                     className="input"
                     value={productInfo.category}
                     onChange={(e) => {
@@ -302,7 +312,7 @@ export default function InputPage() {
 
           {/* 제휴 링크 */}
           <section className={styles.section}>
-            <label className={styles.label}>
+            <div className={styles.label}>
               STEP 2. 제휴 링크
               <div className={styles.modeToggle}>
                 <button
@@ -318,7 +328,7 @@ export default function InputPage() {
                   직접 입력
                 </button>
               </div>
-            </label>
+            </div>
 
             {affiliateMode === 'auto' ? (
               <div className={styles.affiliateAuto}>
@@ -336,7 +346,7 @@ export default function InputPage() {
                 ) : affiliateUrl ? (
                   <div className={styles.affiliateSuccess}>
                     <span>✅</span>
-                    <input className="input" value={affiliateUrl} readOnly />
+                    <input id="affiliate-url-display" name="affiliate-url-display" type="url" className="input" value={affiliateUrl} readOnly />
                   </div>
                 ) : (
                   <p className={styles.helpText}>제품 URL 추출 시 자동으로 생성됩니다</p>
@@ -344,6 +354,8 @@ export default function InputPage() {
               </div>
             ) : (
               <input
+                id="affiliate-url"
+                name="affiliate-url"
                 type="url"
                 className="input"
                 placeholder="쿠팡 파트너스 제휴 링크를 붙여넣으세요"
@@ -358,7 +370,7 @@ export default function InputPage() {
 
           {/* 사진 업로드 */}
           <section className={styles.section}>
-            <label className={styles.label}>STEP 3. 제품 실물 사진</label>
+            <label className={styles.label} htmlFor="photo-input">STEP 3. 제품 실물 사진</label>
             <div
               className={`${styles.dropzone} ${photoPreview ? styles.dropzoneHasPhoto : ''}`}
               onDragOver={(e) => e.preventDefault()}

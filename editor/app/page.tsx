@@ -100,6 +100,8 @@ export default function DashboardPage() {
         }
       />
       <input
+        id="json-import"
+        name="json-import"
         ref={fileInputRef}
         type="file"
         accept=".json"

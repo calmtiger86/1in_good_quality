@@ -800,12 +800,14 @@ export default function EditorPage() {
 
               {/* 위치/크기 */}
               <div className={styles.panelSection}>
-                <label className={styles.panelLabel}>위치 & 크기</label>
+                <span className={styles.panelLabel}>위치 &amp; 크기</span>
                 <div className={styles.posGrid}>
                   {(['x', 'y', 'width', 'height'] as const).map((key) => (
                     <div key={key} className={styles.posField}>
                       <span>{key === 'width' ? 'W' : key === 'height' ? 'H' : key.toUpperCase()}</span>
                       <input
+                        id={`pos-${key}`}
+                        name={key}
                         type="number"
                         className="input"
                         value={Math.round(selected[key])}
@@ -821,8 +823,10 @@ export default function EditorPage() {
               {selected.type === 'text' && !selected.locked && (
                 <>
                   <div className={styles.panelSection}>
-                    <label className={styles.panelLabel}>내용</label>
+                    <label className={styles.panelLabel} htmlFor="element-content">내용</label>
                     <textarea
+                      id="element-content"
+                      name="element-content"
                       className={styles.contentTextarea}
                       value={selected.content || ''}
                       onChange={(e) => updateElement(selected.id, { content: e.target.value })}
@@ -830,8 +834,10 @@ export default function EditorPage() {
                     />
                   </div>
                   <div className={styles.panelSection}>
-                    <label className={styles.panelLabel}>폰트</label>
+                    <label className={styles.panelLabel} htmlFor="element-font">폰트</label>
                     <select
+                      id="element-font"
+                      name="element-font"
                       className="input"
                       value={selected.fontFamily}
                       onChange={(e) => updateElement(selected.id, { fontFamily: e.target.value })}
@@ -841,9 +847,11 @@ export default function EditorPage() {
                     </select>
                   </div>
                   <div className={styles.panelSection}>
-                    <label className={styles.panelLabel}>크기 & 굵기</label>
+                    <span className={styles.panelLabel}>크기 &amp; 굵기</span>
                     <div className={styles.rowFields}>
                       <input
+                        id="element-font-size"
+                        name="element-font-size"
                         type="number"
                         className="input"
                         value={selected.fontSize}
@@ -851,6 +859,8 @@ export default function EditorPage() {
                         style={{ width: 70 }}
                       />
                       <select
+                        id="element-font-weight"
+                        name="element-font-weight"
                         className="input"
                         value={selected.fontWeight}
                         onChange={(e) => updateElement(selected.id, { fontWeight: e.target.value })}
@@ -863,11 +873,11 @@ export default function EditorPage() {
                     </div>
                   </div>
                   <div className={styles.panelSection}>
-                    <label className={styles.panelLabel}>색상</label>
-                    <input type="color" value={selected.color || '#000000'} onChange={(e) => updateElement(selected.id, { color: e.target.value })} className={styles.colorPicker} />
+                    <label className={styles.panelLabel} htmlFor="element-color">색상</label>
+                    <input id="element-color" name="element-color" type="color" value={selected.color || '#000000'} onChange={(e) => updateElement(selected.id, { color: e.target.value })} className={styles.colorPicker} />
                   </div>
                   <div className={styles.panelSection}>
-                    <label className={styles.panelLabel}>방향</label>
+                    <span className={styles.panelLabel}>방향</span>
                     <div className={styles.directionBtns}>
                       <button className={`${styles.dirBtn} ${selected.direction === 'horizontal' ? styles.dirBtnActive : ''}`} onClick={() => updateElement(selected.id, { direction: 'horizontal' })}>가로</button>
                       <button className={`${styles.dirBtn} ${selected.direction === 'vertical' ? styles.dirBtnActive : ''}`} onClick={() => updateElement(selected.id, { direction: 'vertical' })}>세로</button>
@@ -879,16 +889,18 @@ export default function EditorPage() {
               {/* 도형 속성 */}
               {selected.type === 'rect' && (
                 <div className={styles.panelSection}>
-                  <label className={styles.panelLabel}>채우기 색</label>
-                  <input type="color" value={selected.fill || '#000000'} onChange={(e) => updateElement(selected.id, { fill: e.target.value })} className={styles.colorPicker} />
+                  <label className={styles.panelLabel} htmlFor="element-fill">채우기 색</label>
+                  <input id="element-fill" name="element-fill" type="color" value={selected.fill || '#000000'} onChange={(e) => updateElement(selected.id, { fill: e.target.value })} className={styles.colorPicker} />
                 </div>
               )}
 
               {/* 불투명도 (이미지 & 도형) */}
               {(selected.type === 'image' || selected.type === 'rect') && (
                 <div className={styles.panelSection}>
-                  <label className={styles.panelLabel}>불투명도 {Math.round((selected.opacity ?? 1) * 100)}%</label>
+                  <label className={styles.panelLabel} htmlFor="element-opacity">불투명도 {Math.round((selected.opacity ?? 1) * 100)}%</label>
                   <input
+                    id="element-opacity"
+                    name="element-opacity"
                     type="range"
                     min={0}
                     max={1}

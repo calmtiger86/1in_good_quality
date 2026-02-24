@@ -42,6 +42,8 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <input
+            id="password"
+            name="password"
             type="password"
             className={styles.input}
             placeholder="비밀번호"

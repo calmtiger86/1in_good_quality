@@ -351,8 +351,11 @@ export default function StoryboardPage() {
 
               {/* 텍스트 편집 */}
               <div className={styles.panelSection}>
-                <label className={styles.panelLabel}>헤드라인</label>
+                <label className={styles.panelLabel} htmlFor="slide-headline">헤드라인</label>
                 <input
+                  id="slide-headline"
+                  name="slide-headline"
+                  type="text"
                   className="input input--ko"
                   placeholder="헤드라인을 입력하세요 (12~18자)"
                   value={currentSlide.headline || ''}
@@ -364,8 +367,10 @@ export default function StoryboardPage() {
               </div>
 
               <div className={styles.panelSection}>
-                <label className={styles.panelLabel}>서브카피</label>
+                <label className={styles.panelLabel} htmlFor="slide-body">서브카피</label>
                 <textarea
+                  id="slide-body"
+                  name="slide-body"
                   className={`input input--ko ${styles.textarea}`}
                   placeholder="서브카피 (각 줄 12~18자, 2~3줄)"
                   rows={3}
@@ -377,8 +382,10 @@ export default function StoryboardPage() {
               {/* 이미지 프롬프트 (photo_card 제외) */}
               {currentSlide.type !== 'photo_card' && (
                 <div className={styles.panelSection}>
-                  <label className={styles.panelLabel}>일러스트 프롬프트</label>
+                  <label className={styles.panelLabel} htmlFor="slide-image-prompt">일러스트 프롬프트</label>
                   <textarea
+                    id="slide-image-prompt"
+                    name="slide-image-prompt"
                     className={`input ${styles.textarea}`}
                     placeholder="비워두면 생성 시 자동으로 빌드됩니다"
                     rows={4}
@@ -398,7 +405,7 @@ export default function StoryboardPage() {
               {currentSlide.type === 'solution' && (
                 <>
                   <div className={styles.panelSection}>
-                    <label className={styles.panelLabel}>텍스트 패턴</label>
+                    <span className={styles.panelLabel}>텍스트 패턴</span>
                     <div className={styles.optionGroup}>
                       {VARIATION.textLayouts.map((tl) => (
                         <button
@@ -413,7 +420,7 @@ export default function StoryboardPage() {
                   </div>
 
                   <div className={styles.panelSection}>
-                    <label className={styles.panelLabel}>구도</label>
+                    <span className={styles.panelLabel}>구도</span>
                     <div className={styles.optionGroup}>
                       {VARIATION.compositions.map((c) => (
                         <button
@@ -428,7 +435,7 @@ export default function StoryboardPage() {
                   </div>
 
                   <div className={styles.panelSection}>
-                    <label className={styles.panelLabel}>배경</label>
+                    <span className={styles.panelLabel}>배경</span>
                     <div className={styles.optionGroup}>
                       {VARIATION.backgrounds.map((bg) => (
                         <button
@@ -444,7 +451,7 @@ export default function StoryboardPage() {
                   </div>
 
                   <div className={styles.panelSection}>
-                    <label className={styles.panelLabel}>제품 표현</label>
+                    <span className={styles.panelLabel}>제품 표현</span>
                     <div className={styles.optionGroup}>
                       {VARIATION.productStyles.map((ps) => (
                         <button
@@ -461,7 +468,7 @@ export default function StoryboardPage() {
                   {/* 변주 경고 */}
                   {getWarningsForSlide(currentSlideIndex).length > 0 && (
                     <div className={styles.panelWarnings}>
-                      <label className={styles.panelLabel}>⚠️ 변주 경고</label>
+                      <span className={styles.panelLabel}>⚠️ 변주 경고</span>
                       {getWarningsForSlide(currentSlideIndex).map((w, i) => (
                         <p key={i} className={styles.warningText}>{w.message}</p>
                       ))}
@@ -473,8 +480,11 @@ export default function StoryboardPage() {
               {/* CTA 전용 */}
               {currentSlide.type === 'cta' && (
                 <div className={styles.panelSection}>
-                  <label className={styles.panelLabel}>제휴 링크</label>
+                  <label className={styles.panelLabel} htmlFor="cta-button-url">제휴 링크</label>
                   <input
+                    id="cta-button-url"
+                    name="cta-button-url"
+                    type="url"
                     className="input"
                     placeholder="https://link.coupang.com/..."
                     value={currentSlide.buttonUrl || project.affiliateUrl || ''}

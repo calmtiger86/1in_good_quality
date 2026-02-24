@@ -333,8 +333,10 @@ export default function PublishPage() {
 
           <div className={styles.captionFields}>
             <div className={styles.captionField}>
-              <label>에디터스 노트</label>
+              <label htmlFor="caption-editors-note">에디터스 노트</label>
               <textarea
+                id="caption-editors-note"
+                name="caption-editors-note"
                 className={`input input--ko ${styles.textarea}`}
                 rows={3}
                 placeholder="큐레이션 관점의 제품 소개 (에디터 노트 톤)"
@@ -346,8 +348,10 @@ export default function PublishPage() {
             </div>
 
             <div className={styles.captionField}>
-              <label>본문</label>
+              <label htmlFor="caption-body">본문</label>
               <textarea
+                id="caption-body"
+                name="caption-body"
                 className={`input input--ko ${styles.textarea}`}
                 rows={4}
                 placeholder="제품의 핵심 특징과 사용 경험"
@@ -359,8 +363,10 @@ export default function PublishPage() {
             </div>
 
             <div className={styles.captionField}>
-              <label>CTA</label>
+              <label htmlFor="caption-cta">CTA</label>
               <textarea
+                id="caption-cta"
+                name="caption-cta"
                 className={`input input--ko ${styles.textarea}`}
                 rows={2}
                 value={caption.cta}
@@ -371,8 +377,11 @@ export default function PublishPage() {
             </div>
 
             <div className={styles.captionField}>
-              <label>해시태그</label>
+              <label htmlFor="caption-hashtags">해시태그</label>
               <input
+                id="caption-hashtags"
+                name="caption-hashtags"
+                type="text"
                 className="input"
                 value={caption.hashtags.join(' ')}
                 onChange={(e) =>
