@@ -221,7 +221,7 @@ export default function InputPage() {
           {/* 추출된 제품 정보 */}
           {productInfo.name && (
             <section className={`${styles.section} ${styles.infoCard}`}>
-              <label className={styles.label}>📦 제품 정보</label>
+              <span className={styles.label}>📦 제품 정보</span>
               <div className={styles.infoGrid}>
                 <div className={styles.infoField}>
                   <label className={styles.infoLabel} htmlFor="product-name">제품명</label>
