@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
 
     // ─── Firecrawl API로 쿠팡 페이지 HTML 수집 ──────────
     let html: string;
+    let markdown = '';
     try {
       const fcRes = await fetch('https://api.firecrawl.dev/v1/scrape', {
         method: 'POST',
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
           'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: productUrl, formats: ['rawHtml'] }),
+        body: JSON.stringify({ url: productUrl, formats: ['rawHtml', 'markdown'] }),
       });
 
       if (!fcRes.ok) {
@@ -48,6 +49,7 @@ export async function POST(req: NextRequest) {
 
       const fcData = await fcRes.json();
       html = fcData?.data?.rawHtml ?? '';
+      markdown = fcData?.data?.markdown ?? '';
     } catch {
       return NextResponse.json(
         { error: '페이지를 가져올 수 없습니다. URL을 확인해 주세요.' },
@@ -127,6 +129,19 @@ export async function POST(req: NextRequest) {
     }
     if (!price) {
       price = extractPrice(html);
+    }
+
+    // ─── 3차: markdown 폴백 (JSON-LD + OG 모두 실패 시) ──
+    if (!name && markdown) {
+      const headingMatch = markdown.match(/^#\s+(.+)/m);
+      if (headingMatch) name = headingMatch[1].trim();
+    }
+    if (!price && markdown) {
+      const priceMatch = markdown.match(/[₩￦]?\s?([\d,]{4,})\s*원?/);
+      if (priceMatch) {
+        const digits = priceMatch[1].replace(/,/g, '');
+        price = `₩${Number(digits).toLocaleString()}`;
+      }
     }
 
     // 카테고리 추측
