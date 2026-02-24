@@ -8,7 +8,7 @@ import Header from '@/components/common/Header';
 import { useProjectStore } from '@/stores/projectStore';
 import { exportProjectAsJSON } from '@/lib/db';
 import type { Slide } from '@/lib/db';
-import { TYPOGRAPHY, CANVAS, COLORS } from '@/lib/openspec';
+import { TYPOGRAPHY, CANVAS, COLORS, LOGO } from '@/lib/openspec';
 import styles from './page.module.css';
 
 export default function PublishPage() {
@@ -114,11 +114,22 @@ export default function PublishPage() {
       ctx.textBaseline = 'top';
     }
 
-    // 로고 (항상 최상단 레이어)
-    ctx.fillStyle = slide.background === COLORS.background.white ? COLORS.background.kraft : '#fff';
-    ctx.font = '700 14px Inter, sans-serif';
-    ctx.textBaseline = 'top';
-    ctx.fillText('1iN 일인양품', 24, 24);
+    // 로고 (항상 최상단 레이어) — PNG 우선, 실패 시 텍스트 폴백
+    await new Promise<void>((resolve) => {
+      const logoImg = new Image();
+      logoImg.onload = () => {
+        ctx.drawImage(logoImg, LOGO.position.x, LOGO.position.y, LOGO.width.max, LOGO.width.max);
+        resolve();
+      };
+      logoImg.onerror = () => {
+        ctx.fillStyle = slide.background === COLORS.background.white ? COLORS.background.kraft : '#fff';
+        ctx.font = '700 14px Inter, sans-serif';
+        ctx.textBaseline = 'top';
+        ctx.fillText('1iN 일인양품', LOGO.position.x, LOGO.position.y);
+        resolve();
+      };
+      logoImg.src = LOGO.getLogoForBackground(slide.background || COLORS.background.kraft);
+    });
 
     // 헤드라인
     if (slide.headline) {

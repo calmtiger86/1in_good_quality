@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Header from '@/components/common/Header';
 import { useProjectStore } from '@/stores/projectStore';
-import { COLORS, SLIDE_TYPES, CANVAS } from '@/lib/openspec';
+import { COLORS, SLIDE_TYPES, CANVAS, LOGO } from '@/lib/openspec';
 import type { Slide } from '@/lib/db';
 import styles from './page.module.css';
 
@@ -270,21 +270,34 @@ async function renderToPNG(
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, CANVAS.WIDTH, CANVAS.HEIGHT);
 
-  // 이미지 요소 미리 로드
+  // 이미지 요소 미리 로드 (일반 image + logo PNG)
   const imageMap = new Map<string, HTMLImageElement>();
-  await Promise.all(
-    elements
-      .filter((el) => el.type === 'image' && el.src)
-      .map(
-        (el) =>
-          new Promise<void>((resolve) => {
-            const img = new Image();
-            img.onload = () => { imageMap.set(el.id, img); resolve(); };
-            img.onerror = () => resolve();
-            img.src = el.src!;
-          })
-      )
-  );
+  const preloads: Promise<void>[] = elements
+    .filter((el) => el.type === 'image' && el.src)
+    .map(
+      (el) =>
+        new Promise<void>((resolve) => {
+          const img = new Image();
+          img.onload = () => { imageMap.set(el.id, img); resolve(); };
+          img.onerror = () => resolve();
+          img.src = el.src!;
+        })
+    );
+
+  // 로고 PNG 프리로드
+  if (elements.some((el) => el.type === 'logo')) {
+    preloads.push(
+      new Promise<void>((resolve) => {
+        const logoSrc = LOGO.getLogoForBackground(background);
+        const img = new Image();
+        img.onload = () => { imageMap.set('__logo__', img); resolve(); };
+        img.onerror = () => resolve(); // 실패 시 텍스트 폴백
+        img.src = logoSrc;
+      })
+    );
+  }
+
+  await Promise.all(preloads);
 
   // 요소 그리기
   for (const el of elements) {
@@ -294,7 +307,18 @@ async function renderToPNG(
     if (el.type === 'rect') {
       ctx.fillStyle = el.fill || 'rgba(0,0,0,0.1)';
       ctx.fillRect(el.x, el.y, el.width, el.height);
-    } else if (el.type === 'text' || el.type === 'logo') {
+    } else if (el.type === 'logo') {
+      const logoImg = imageMap.get('__logo__');
+      if (logoImg) {
+        ctx.drawImage(logoImg, el.x, el.y, el.width, el.height);
+      } else {
+        // 폴백: 텍스트
+        ctx.fillStyle = el.color || COLORS.background.kraft;
+        ctx.font = `${el.fontWeight || '700'} ${el.fontSize || 14}px ${el.fontFamily || 'Inter'}, sans-serif`;
+        ctx.textBaseline = 'top';
+        ctx.fillText(el.content || '1iN 일인양품', el.x, el.y);
+      }
+    } else if (el.type === 'text') {
       ctx.fillStyle = el.color || '#000';
       const size = el.fontSize || 24;
       const weight = el.fontWeight || '400';
