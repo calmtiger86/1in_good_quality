@@ -6,7 +6,7 @@
 ---
 
 ## 마지막 업데이트
-2026-02-24 — P0/P1/P2 + Vercel 배포 전체 완료
+2026-02-24 — 쿠팡 가격 추출 버그 수정 완료 (c6cc3b5)
 
 ---
 
@@ -36,7 +36,13 @@
 - [x] P2-2: `/editor/vercel.json` — Vercel 배포 설정
 - [x] P2-3: 최초 git 커밋 & GitHub 푸시 (`8a53913`) + Vercel 배포 완료
 
-### 추가 구현 (이번 세션)
+### 가격 추출 버그 수정 (최신)
+- [x] `editor/app/api/extract/route.ts`:
+  - Claude Tool schema `required: ['name', 'price']` 변경 (가격 추출 강제)
+  - `if (!name)` 블록 외부에 독립 가격 폴백 블록 추가 (항상 실행)
+  - 폴백 순서: JSON-LD → extractPrice() → Markdown 3패턴 + 1,000원 필터
+
+### 추가 구현 (이전 세션)
 - [x] `editor/app/project/[id]/publish/page.tsx`:
   - ZIP 일괄 다운로드 (JSZip + file-saver, AI 이미지 포함)
   - Web Viewer HTML 생성 (슬라이더 + 구매 버튼, 모바일 스와이프 지원)
