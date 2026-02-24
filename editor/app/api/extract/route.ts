@@ -80,6 +80,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 쿠팡 Akamai 봇 차단 감지: "Access Denied" 에러 페이지 반환 시
+    // Firecrawl이 HTTP 200을 반환해도 실제 내용이 차단 페이지인 경우
+    const pageTitle = extractMeta(html, 'og:title') || extractTitle(html) || '';
+    const firstLine = (markdown || '').trim().split('\n')[0];
+    if (
+      /access.?denied|접근.*거부/i.test(pageTitle) ||
+      /^#?\s*access.?denied/i.test(firstLine)
+    ) {
+      return NextResponse.json(
+        { error: '쿠팡이 접근을 차단했습니다. 잠시 후(30초~1분) 다시 시도해 주세요.' },
+        { status: 503 }
+      );
+    }
+
     let name = '';
     let price = '';
     let originalPrice = '';
