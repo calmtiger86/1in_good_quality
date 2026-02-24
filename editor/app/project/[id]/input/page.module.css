@@ -100,6 +100,58 @@
   color: var(--text-muted);
 }
 
+/* ─── 카피라이팅 소구점 ─── */
+.copySection {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px dashed var(--ui-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.copyGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.copyGroupLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.featureTag {
+  background: rgba(196, 168, 130, 0.15);
+  border: 1px solid rgba(196, 168, 130, 0.4);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.copyList {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.copyItem {
+  font-family: var(--font-ko);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.targetAudience {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
 /* ─── 제휴 링크 ─── */
 .modeToggle {
   display: flex;

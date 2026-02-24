@@ -17,12 +17,22 @@
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1"
     },
-    "testMatch": ["**/__tests__/**/*.test.ts"],
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ],
     "transform": {
-      "^.+\\.tsx?$": ["ts-jest", { "tsconfig": { "strict": false } }]
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "tsconfig": {
+            "strict": false
+          }
+        }
+      ]
     }
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "dexie": "^4.3.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",

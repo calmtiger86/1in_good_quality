@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
 
 /**
  * 쿠팡 제품 URL → 제품 정보 추출 API
- * Firecrawl API로 HTML 수집 (봇 감지 우회)
- * JSON-LD (schema.org) 우선 파싱 + OG meta 폴백
+ * Firecrawl API로 HTML 수집 (봇 감지 우회, JS 렌더링 3초 대기)
+ * Claude Haiku로 마크다운 파싱 → 제품 정보 + 카피라이팅 소구점 추출
+ * ANTHROPIC_API_KEY 미설정 시 JSON-LD + OG 메타 정규식 폴백
  */
 export async function POST(req: NextRequest) {
   try {
@@ -27,8 +29,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ─── Firecrawl API로 쿠팡 페이지 HTML 수집 ──────────
-    let html: string;
+    // ─── Firecrawl API로 쿠팡 페이지 수집 ──────────────
+    let html = '';
     let markdown = '';
     try {
       const fcRes = await fetch('https://api.firecrawl.dev/v1/scrape', {
@@ -37,7 +39,12 @@ export async function POST(req: NextRequest) {
           'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: productUrl, formats: ['rawHtml', 'markdown'] }),
+        body: JSON.stringify({
+          url: productUrl,
+          formats: ['rawHtml', 'markdown'],
+          waitFor: 3000,           // JS 렌더링 3초 대기
+          onlyMainContent: false,  // 사이드바 가격/스펙 포함
+        }),
       });
 
       if (!fcRes.ok) {
@@ -48,7 +55,7 @@ export async function POST(req: NextRequest) {
       }
 
       const fcData = await fcRes.json();
-      html = fcData?.data?.rawHtml ?? '';
+      html     = fcData?.data?.rawHtml  ?? '';
       markdown = fcData?.data?.markdown ?? '';
     } catch {
       return NextResponse.json(
@@ -57,98 +64,183 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!html || html.length < 500) {
+    // markdown이 있으면 rawHtml이 짧아도 진행 (봇 차단 시 rawHtml 비어있을 수 있음)
+    if (!markdown && (!html || html.length < 500)) {
       return NextResponse.json(
         { error: '제품 페이지를 파싱할 수 없습니다. 잠시 후 다시 시도해 주세요.' },
         { status: 429 }
       );
     }
 
-    // ─── 1차: JSON-LD (schema.org) 파싱 ─────────────
-    const jsonLd = extractJsonLd(html);
-
     let name = '';
     let price = '';
     let originalPrice = '';
-    let image = '';
-    let images: string[] = [];
+    let category = '기타';
+    let specs: string[] = [];
     let description = '';
+    let keyFeatures: string[] = [];
+    let copyPoints: string[] = [];
+    let targetAudience = '';
     let rating = '';
     let ratingCount = '';
     let availability = '';
 
-    if (jsonLd) {
-      name = jsonLd.name || '';
-      description = jsonLd.description || '';
+    // ─── Claude API 추출 (ANTHROPIC_API_KEY 설정 시) ───
+    if (process.env.ANTHROPIC_API_KEY && markdown) {
+      try {
+        const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+        const msg = await anthropic.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1024,
+          tools: [
+            {
+              name: 'extract_product',
+              description: '쿠팡 제품 페이지 마크다운에서 제품 정보와 카드뉴스 카피라이팅 소구점을 추출합니다.',
+              input_schema: {
+                type: 'object' as const,
+                properties: {
+                  name: {
+                    type: 'string',
+                    description: '제품명 (쿠팡/브랜드 접미사 제외)',
+                  },
+                  price: {
+                    type: 'string',
+                    description: '현재 판매가 (₩ 포함, 예: ₩29,900)',
+                  },
+                  originalPrice: {
+                    type: 'string',
+                    description: '정가/할인 전 가격 (있을 경우만)',
+                  },
+                  category: {
+                    type: 'string',
+                    enum: ['주방용품', '가전', '가구/인테리어', '뷰티/건강', '식품', '생활소품', '디지털/가전', '패션', '기타'],
+                  },
+                  specs: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: '핵심 스펙 최대 6개 ("키: 값" 형태)',
+                  },
+                  description: {
+                    type: 'string',
+                    description: '제품 한 줄 요약 (50자 이내)',
+                  },
+                  keyFeatures: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: '제품 핵심 기능/특징 3-5개',
+                  },
+                  copyPoints: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: '카드뉴스에 쓸 카피라이팅 소구점 5-7개 (구어체 한국어, 감성적 표현)',
+                  },
+                  targetAudience: {
+                    type: 'string',
+                    description: '이 제품의 주 타겟 고객층 (한 줄)',
+                  },
+                },
+                required: ['name'],
+              },
+            },
+          ],
+          tool_choice: { type: 'tool', name: 'extract_product' },
+          messages: [
+            {
+              role: 'user',
+              content: `다음은 쿠팡 제품 페이지 내용입니다. 제품 정보와 카드뉴스에 활용할 카피라이팅 포인트를 추출해 주세요:\n\n${markdown.slice(0, 8000)}`,
+            },
+          ],
+        });
 
-      // 이미지 배열
-      if (Array.isArray(jsonLd.image)) {
-        images = jsonLd.image.map((img: string) =>
-          img.startsWith('//') ? `https:${img}` : img
-        );
-        image = images[0] || '';
-      } else if (typeof jsonLd.image === 'string') {
-        image = jsonLd.image.startsWith('//')
-          ? `https:${jsonLd.image}`
-          : jsonLd.image;
-        images = [image];
-      }
-
-      // 가격 정보
-      if (jsonLd.offers) {
-        const salePrice = jsonLd.offers.price;
-        if (salePrice) {
-          price = `₩${Number(salePrice).toLocaleString()}`;
+        const toolResult = msg.content.find((c) => c.type === 'tool_use');
+        if (toolResult?.type === 'tool_use') {
+          const inp = toolResult.input as Record<string, unknown>;
+          name           = String(inp.name           || '');
+          price          = String(inp.price          || '');
+          originalPrice  = String(inp.originalPrice  || '');
+          category       = String(inp.category       || '기타');
+          specs          = Array.isArray(inp.specs)       ? (inp.specs       as string[]) : [];
+          description    = String(inp.description    || '');
+          keyFeatures    = Array.isArray(inp.keyFeatures) ? (inp.keyFeatures as string[]) : [];
+          copyPoints     = Array.isArray(inp.copyPoints)  ? (inp.copyPoints  as string[]) : [];
+          targetAudience = String(inp.targetAudience || '');
         }
-        if (jsonLd.offers.priceSpecification?.price) {
-          originalPrice = `₩${Number(jsonLd.offers.priceSpecification.price).toLocaleString()}`;
-        }
-        if (jsonLd.offers.availability) {
-          availability = jsonLd.offers.availability.includes('InStock')
-            ? '재고 있음'
-            : '품절';
-        }
-      }
-
-      if (jsonLd.aggregateRating) {
-        rating = String(jsonLd.aggregateRating.ratingValue || '');
-        ratingCount = String(jsonLd.aggregateRating.ratingCount || '');
+      } catch (claudeErr) {
+        console.error('Claude 추출 실패, 정규식 폴백:', claudeErr);
+        // 아래 정규식 폴백으로 계속
       }
     }
 
-    // ─── 2차: OG 메타 태그 폴백 ──────────────────────
+    // ─── 정규식 폴백 (Claude 미설정 또는 실패 시) ────────
     if (!name) {
-      name = extractMeta(html, 'og:title') || extractTitle(html) || '';
+      // 1차: JSON-LD (schema.org)
+      const jsonLd = extractJsonLd(html);
+      if (jsonLd) {
+        name        = jsonLd.name        || '';
+        description = jsonLd.description || '';
+
+        if (Array.isArray(jsonLd.image)) {
+          // 이미지는 아래에서 별도 처리
+        }
+        if (jsonLd.offers) {
+          const salePrice = jsonLd.offers.price;
+          if (salePrice) price = `₩${Number(salePrice).toLocaleString()}`;
+          if (jsonLd.offers.priceSpecification?.price) {
+            originalPrice = `₩${Number(jsonLd.offers.priceSpecification.price).toLocaleString()}`;
+          }
+          if (jsonLd.offers.availability) {
+            availability = jsonLd.offers.availability.includes('InStock') ? '재고 있음' : '품절';
+          }
+        }
+        if (jsonLd.aggregateRating) {
+          rating      = String(jsonLd.aggregateRating.ratingValue || '');
+          ratingCount = String(jsonLd.aggregateRating.ratingCount || '');
+        }
+      }
+
+      // 2차: OG 메타 태그
+      if (!name)        name        = extractMeta(html, 'og:title') || extractTitle(html) || '';
+      if (!description) description = extractMeta(html, 'og:description') || '';
+      if (!price)       price       = extractPrice(html);
+
+      // 3차: markdown 헤딩/가격 패턴
+      if (!name && markdown) {
+        const headingMatch = markdown.match(/^#\s+(.+)/m);
+        if (headingMatch) name = headingMatch[1].trim();
+      }
+      if (!price && markdown) {
+        const priceMatch = markdown.match(/[₩￦]?\s?([\d,]{4,})\s*원?/);
+        if (priceMatch) {
+          const digits = priceMatch[1].replace(/,/g, '');
+          price = `₩${Number(digits).toLocaleString()}`;
+        }
+      }
+
+      category = guessCategory(name, description);
+      specs    = extractSpecs(html);
+    }
+
+    // ─── 이미지 추출 (rawHtml OG 태그 기준, 항상 실행) ──
+    let image = '';
+    let images: string[] = [];
+
+    const jsonLdForImg = html ? extractJsonLd(html) : null;
+    if (jsonLdForImg?.image) {
+      if (Array.isArray(jsonLdForImg.image)) {
+        images = jsonLdForImg.image.map((img: string) =>
+          img.startsWith('//') ? `https:${img}` : img
+        );
+        image = images[0] || '';
+      } else if (typeof jsonLdForImg.image === 'string') {
+        image  = jsonLdForImg.image.startsWith('//') ? `https:${jsonLdForImg.image}` : jsonLdForImg.image;
+        images = [image];
+      }
     }
     if (!image) {
       const ogImage = extractMeta(html, 'og:image') || '';
       image = ogImage.startsWith('//') ? `https:${ogImage}` : ogImage;
+      if (image) images = [image];
     }
-    if (!description) {
-      description = extractMeta(html, 'og:description') || '';
-    }
-    if (!price) {
-      price = extractPrice(html);
-    }
-
-    // ─── 3차: markdown 폴백 (JSON-LD + OG 모두 실패 시) ──
-    if (!name && markdown) {
-      const headingMatch = markdown.match(/^#\s+(.+)/m);
-      if (headingMatch) name = headingMatch[1].trim();
-    }
-    if (!price && markdown) {
-      const priceMatch = markdown.match(/[₩￦]?\s?([\d,]{4,})\s*원?/);
-      if (priceMatch) {
-        const digits = priceMatch[1].replace(/,/g, '');
-        price = `₩${Number(digits).toLocaleString()}`;
-      }
-    }
-
-    // 카테고리 추측
-    const category = guessCategory(name, description);
-
-    // 스펙 추출
-    const specs = extractSpecs(html);
 
     // 쿠팡 접미사 정리
     name = cleanText(name).replace(/\s*[-|]\s*쿠팡$/, '').trim();
@@ -165,6 +257,9 @@ export async function POST(req: NextRequest) {
       rating,
       ratingCount,
       availability,
+      keyFeatures,
+      copyPoints,
+      targetAudience,
     });
   } catch (err: unknown) {
     console.error('제품 추출 오류:', err);
@@ -277,8 +372,8 @@ function guessCategory(name: string, desc: string): string {
     ['패션', ['티셔츠', '바지', '자켓', '신발', '모자', '가방', '양말']],
   ];
 
-  for (const [category, keywords] of map) {
-    if (keywords.some((kw) => text.includes(kw))) return category;
+  for (const [cat, keywords] of map) {
+    if (keywords.some((kw) => text.includes(kw))) return cat;
   }
   return '기타';
 }

@@ -27,6 +27,9 @@ export default function InputPage() {
     category: '',
     specs: [] as string[],
   });
+  const [keyFeatures, setKeyFeatures] = useState<string[]>([]);
+  const [copyPoints, setCopyPoints] = useState<string[]>([]);
+  const [targetAudience, setTargetAudience] = useState('');
 
   useEffect(() => {
     loadProject(projectId);
@@ -42,6 +45,9 @@ export default function InputPage() {
         category: project.productCategory || '',
         specs: project.productSpecs || [],
       });
+      setKeyFeatures(project.productKeyFeatures || []);
+      setCopyPoints(project.productCopyPoints || []);
+      setTargetAudience(project.productTargetAudience || '');
     }
   }, [project]);
 
@@ -77,11 +83,18 @@ export default function InputPage() {
       };
 
       setProductInfo(info);
+      setKeyFeatures(data.keyFeatures || []);
+      setCopyPoints(data.copyPoints || []);
+      setTargetAudience(data.targetAudience || '');
+
       updateField('productUrl', url);
       updateField('productName', info.name);
       updateField('productPrice', info.price);
       updateField('productCategory', info.category);
       updateField('productSpecs', info.specs);
+      updateField('productKeyFeatures', data.keyFeatures || []);
+      updateField('productCopyPoints', data.copyPoints || []);
+      updateField('productTargetAudience', data.targetAudience || '');
       updateField('title', info.name);
 
       // 추출된 이미지가 있으면 자동으로 미리보기 설정
@@ -253,6 +266,35 @@ export default function InputPage() {
                   {productInfo.specs.map((spec, i) => (
                     <span key={i} className={styles.specTag}>{spec}</span>
                   ))}
+                </div>
+              )}
+
+              {/* Claude 추출 카피라이팅 데이터 */}
+              {(keyFeatures.length > 0 || copyPoints.length > 0) && (
+                <div className={styles.copySection}>
+                  {keyFeatures.length > 0 && (
+                    <div className={styles.copyGroup}>
+                      <span className={styles.copyGroupLabel}>핵심 기능</span>
+                      <div className={styles.specs}>
+                        {keyFeatures.map((f, i) => (
+                          <span key={i} className={styles.featureTag}>{f}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {copyPoints.length > 0 && (
+                    <div className={styles.copyGroup}>
+                      <span className={styles.copyGroupLabel}>✍️ 카피라이팅 소구점</span>
+                      <ol className={styles.copyList}>
+                        {copyPoints.map((pt, i) => (
+                          <li key={i} className={styles.copyItem}>{pt}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                  {targetAudience && (
+                    <p className={styles.targetAudience}>👥 타겟: {targetAudience}</p>
+                  )}
                 </div>
               )}
             </section>

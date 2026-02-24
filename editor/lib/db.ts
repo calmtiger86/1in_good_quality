@@ -41,6 +41,9 @@ export interface Project {
   productCategory: string;
   productSpecs: string[];
   productImageUrl: string | null;
+  productKeyFeatures?: string[];    // Claude 추출 핵심 기능
+  productCopyPoints?: string[];     // Claude 추출 카피 소구점
+  productTargetAudience?: string;   // Claude 추출 타겟 고객층
   userPhotoBlob: Blob | null;
   slides: Slide[];
   caption: {
