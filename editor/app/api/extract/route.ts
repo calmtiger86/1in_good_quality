@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           url: productUrl,
           formats: ['rawHtml', 'markdown'],
-          waitFor: 3000,           // JS 렌더링 3초 대기
+          waitFor: 5000,           // JS 렌더링 5초 대기 (쿠팡 가격 렌더링)
           onlyMainContent: false,  // 사이드바 가격/스펙 포함
         }),
       });
@@ -147,7 +147,16 @@ export async function POST(req: NextRequest) {
           messages: [
             {
               role: 'user',
-              content: `다음은 쿠팡 제품 페이지 내용입니다. 제품 정보와 카드뉴스에 활용할 카피라이팅 포인트를 추출해 주세요:\n\n${markdown.slice(0, 8000)}`,
+              content: [
+                '다음은 쿠팡 제품 페이지 정보입니다. 제품 정보와 카드뉴스 카피라이팅 포인트를 추출해 주세요.',
+                (extractMeta(html, 'og:title') || extractTitle(html))
+                  ? `[페이지 제목] ${extractMeta(html, 'og:title') || extractTitle(html)}`
+                  : '',
+                extractMeta(html, 'og:description')
+                  ? `[페이지 설명] ${extractMeta(html, 'og:description')}`
+                  : '',
+                markdown ? `[페이지 본문]\n${markdown.slice(0, 7500)}` : '',
+              ].filter(Boolean).join('\n\n'),
             },
           ],
         });

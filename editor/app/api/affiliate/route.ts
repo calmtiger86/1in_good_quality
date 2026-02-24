@@ -55,13 +55,14 @@ export async function POST(request: Request) {
 
   const accessKey = process.env.COUPANG_PARTNERS_ACCESS_KEY;
   const secretKey = process.env.COUPANG_PARTNERS_SECRET_KEY;
+  const vendorId  = process.env.COUPANG_PARTNERS_VENDOR_ID;
 
   // API 키 미설정 → 프론트엔드가 fallback: true를 감지하여 수동입력 UI로 전환
-  if (!accessKey || !secretKey) {
+  if (!accessKey || !secretKey || !vendorId) {
     return NextResponse.json(
       {
         error:
-          'COUPANG_PARTNERS_ACCESS_KEY 또는 COUPANG_PARTNERS_SECRET_KEY가 설정되지 않았습니다.',
+          'COUPANG_PARTNERS_ACCESS_KEY, COUPANG_PARTNERS_SECRET_KEY 또는 COUPANG_PARTNERS_VENDOR_ID가 설정되지 않았습니다.',
         fallback: true,
       },
       { status: 503 }
@@ -72,7 +73,8 @@ export async function POST(request: Request) {
     const affiliateUrl = await generateCoupangAffiliateLink(
       trimmedUrl,
       accessKey,
-      secretKey
+      secretKey,
+      vendorId
     );
     return NextResponse.json({ affiliateUrl });
   } catch (err) {
@@ -90,7 +92,8 @@ export async function POST(request: Request) {
 async function generateCoupangAffiliateLink(
   productUrl: string,
   accessKey: string,
-  secretKey: string
+  secretKey: string,
+  vendorId: string
 ): Promise<string> {
   const method = 'POST';
   const date = formatCoupangDate(new Date());
@@ -105,6 +108,7 @@ async function generateCoupangAffiliateLink(
     headers: {
       'Content-Type': 'application/json;charset=UTF-8',
       Authorization: authorization,
+      'X-Requested-By': vendorId,
     },
     body: JSON.stringify({ coupangUrls: [productUrl] }),
   });
