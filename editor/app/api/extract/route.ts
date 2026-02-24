@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
                     description: '이 제품의 주 타겟 고객층 (한 줄)',
                   },
                 },
-                required: ['name', 'price'],
+                required: ['name'],
               },
             },
           ],
@@ -167,6 +167,10 @@ export async function POST(req: NextRequest) {
           name           = String(inp.name           || '');
           price          = String(inp.price          || '');
           originalPrice  = String(inp.originalPrice  || '');
+          // Claude가 가격을 못 찾을 때 "<UNKNOWN>", "N/A" 등 플레이스홀더를 반환하는 경우 제거
+          // 유효한 가격은 반드시 ₩로 시작해야 함
+          if (price && !/^₩[\d,]+/.test(price)) price = '';
+          if (originalPrice && !/^₩[\d,]+/.test(originalPrice)) originalPrice = '';
           category       = String(inp.category       || '기타');
           specs          = Array.isArray(inp.specs)       ? (inp.specs       as string[]) : [];
           description    = String(inp.description    || '');
