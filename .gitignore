@@ -1,0 +1,17 @@
+# 환경변수 파일
+.env
+.env.*
+
+# 인증키/비밀키
+*.pem
+*.key
+*.p12
+*.pfx
+
+# 서비스 계정/비밀 설정
+credentials.json
+secrets.json
+service-account.json
+
+# macOS 찌꺼기 파일
+.DS_Store

@@ -1,0 +1,165 @@
+/* OpenSpec v6.6 — CSS Design Tokens */
+
+:root {
+  /* ─── 배경색 (§4.2) ─── */
+  --bg-kraft: #C4A882;
+  --bg-white: #FFFFFF;
+  --bg-light-beige: #E5D3B3;
+  --bg-app: #FAFAFA;
+
+  /* ─── 텍스트 (§4.2) ─── */
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+  --text-light: #999999;
+
+  /* ─── 상태 색상 ─── */
+  --status-success: #22c55e;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+
+  /* ─── UI 색상 ─── */
+  --ui-border: #e5e5e5;
+  --ui-border-hover: #d4d4d4;
+  --ui-bg-card: #ffffff;
+  --ui-bg-hover: #f5f5f5;
+  --ui-accent: var(--bg-kraft);
+  --ui-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --ui-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  /* ─── 폰트 (§4.4) ─── */
+  --font-ko: 'NanumSquare', sans-serif;
+  --font-en: 'Inter', sans-serif;
+
+  /* ─── 간격 ─── */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* ─── 둥근 모서리 ─── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* ─── 전환 ─── */
+  --transition: 0.2s ease;
+}
+
+/* ─── 글로벌 리셋 ─── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-en);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── 공통 유틸리티 ─── */
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+}
+
+.container--narrow {
+  max-width: 640px;
+}
+
+.card {
+  background: var(--ui-bg-card);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--ui-shadow);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-en);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn--primary {
+  background: var(--text-primary);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: #222;
+}
+
+.btn--secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--ui-border);
+}
+
+.btn--secondary:hover {
+  background: var(--ui-bg-hover);
+}
+
+.btn--full {
+  width: 100%;
+}
+
+.btn--lg {
+  padding: 14px 28px;
+  font-size: 16px;
+  border-radius: var(--radius-md);
+}
+
+/* ─── 입력 필드 ─── */
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-en);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.input:focus {
+  border-color: var(--ui-accent);
+}
+
+.input--ko {
+  font-family: var(--font-ko);
+}
+
+/* ─── 상태 배지 ─── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge--success { background: #dcfce7; color: #166534; }
+.badge--warning { background: #fef3c7; color: #92400e; }
+.badge--error { background: #fee2e2; color: #991b1b; }
+.badge--info { background: #dbeafe; color: #1e40af; }
+.badge--draft { background: #f3f4f6; color: #6b7280; }

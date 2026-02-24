@@ -1,0 +1,32 @@
+{
+  "framework": "nextjs",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "functions": {
+    "app/api/extract/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/generate-image/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/affiliate/route.ts": {
+      "maxDuration": 15
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        }
+      ]
+    }
+  ]
+}

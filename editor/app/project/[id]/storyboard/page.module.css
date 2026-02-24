@@ -1,0 +1,431 @@
+/* ─── AI 생성 진행 바 ─── */
+.genProgressBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 6px var(--space-lg);
+  background: #f0f4ff;
+  border-bottom: 1px solid #c7d2fe;
+  font-size: 12px;
+  color: #4338ca;
+}
+
+.genProgressTrack {
+  flex: 1;
+  height: 4px;
+  background: #c7d2fe;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.genProgressFill {
+  height: 100%;
+  background: #4f46e5;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2xl);
+  color: var(--text-muted);
+}
+
+/* ─── 3패널 레이아웃 ─── */
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 280px;
+  height: calc(100vh - 53px - 44px); /* header + variation bar */
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ─── 좌측 사이드바 ─── */
+.sidebar {
+  border-right: 1px solid var(--ui-border);
+  background: var(--ui-bg-card);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.sidebarHeader h3 {
+  font-family: var(--font-ko);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sidebarActions {
+  display: flex;
+  gap: 4px;
+}
+
+.miniBtn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.miniBtn:hover {
+  background: var(--ui-bg-hover);
+}
+
+.slideList {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-sm);
+}
+
+.slideItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  margin-bottom: 2px;
+}
+
+.slideItem:hover {
+  background: var(--ui-bg-hover);
+}
+
+.slideItemActive {
+  background: rgba(196, 168, 130, 0.1);
+  border-left: 3px solid var(--bg-kraft);
+}
+
+.slideThumb {
+  width: 40px;
+  height: 50px;
+  flex-shrink: 0;
+}
+
+.slideThumbInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.slideThumbIcon {
+  font-size: 16px;
+}
+
+.slideInfo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.slideLabel {
+  font-family: var(--font-ko);
+  font-size: 11px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slideStatus {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.warningDot {
+  font-size: 10px;
+}
+
+.addBtn {
+  margin: var(--space-sm);
+  padding: var(--space-sm);
+  border: 1px dashed var(--ui-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: var(--font-ko);
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.addBtn:hover {
+  border-color: var(--bg-kraft);
+  color: var(--text-primary);
+}
+
+/* ─── 중앙 캔버스 ─── */
+.canvas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-app);
+  padding: var(--space-lg);
+  overflow: auto;
+}
+
+.canvasInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.canvasCard {
+  width: 324px;
+  height: 405px; /* 4:5 */
+  border-radius: var(--radius-md);
+  box-shadow: var(--ui-shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.canvasLogo {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-family: var(--font-en);
+  font-weight: 800;
+  font-size: 14px;
+  z-index: 2;
+}
+
+.canvasCenter {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvasImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.canvasPlaceholder {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.2);
+}
+
+.canvasPlaceholder span {
+  font-size: 48px;
+  display: block;
+  margin-bottom: var(--space-sm);
+}
+
+.canvasPlaceholder p {
+  font-family: var(--font-ko);
+  font-size: 12px;
+}
+
+.canvasHeadline {
+  position: absolute;
+  bottom: 60px;
+  left: 16px;
+  right: 16px;
+  font-family: var(--font-ko);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.canvasActions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* ─── 우측 속성 패널 ─── */
+.panel {
+  border-left: 1px solid var(--ui-border);
+  background: var(--ui-bg-card);
+  overflow-y: auto;
+  padding: var(--space-md);
+}
+
+.panelTitle {
+  font-family: var(--font-ko);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.panelSection {
+  margin-bottom: var(--space-md);
+}
+
+.panelLabel {
+  display: block;
+  font-family: var(--font-ko);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: var(--font-ko);
+}
+
+.charCount {
+  font-size: 10px;
+  color: var(--text-light);
+  text-align: right;
+  display: block;
+  margin-top: 2px;
+}
+
+.optionGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.optionBtn {
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  background: none;
+  font-family: var(--font-ko);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.optionBtn:hover {
+  border-color: var(--bg-kraft);
+}
+
+.optionBtnActive {
+  background: var(--text-primary);
+  color: #fff;
+  border-color: var(--text-primary);
+}
+
+.panelWarnings {
+  background: #fef3c7;
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.warningText {
+  font-size: 11px;
+  color: #92400e;
+  margin-top: 4px;
+}
+
+/* ─── 하단 변주 바 ─── */
+.variationBar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--ui-border);
+  background: var(--ui-bg-card);
+  overflow-x: auto;
+  height: 44px;
+}
+
+.varItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 40px;
+}
+
+.varItem:hover {
+  background: var(--ui-bg-hover);
+}
+
+.varItemActive {
+  background: rgba(196, 168, 130, 0.15);
+}
+
+.varLabel {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.varTags {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.varTag {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.varColorDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+/* ─── 우클릭 메뉴 ─── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.contextMenu {
+  position: fixed;
+  z-index: 1001;
+  background: var(--ui-bg-card);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--ui-shadow-lg);
+  overflow: hidden;
+  min-width: 120px;
+}
+
+.contextMenu button {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: var(--font-ko);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.contextMenu button:hover {
+  background: var(--ui-bg-hover);
+}

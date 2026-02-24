@@ -1,0 +1,70 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--ui-bg-card);
+  border-bottom: 1px solid var(--ui-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.logoText {
+  font-family: var(--font-en);
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--bg-kraft);
+}
+
+.logoSub {
+  font-family: var(--font-ko);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.divider {
+  color: var(--ui-border);
+  font-size: 18px;
+}
+
+.title {
+  font-family: var(--font-ko);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.saveStatus {
+  font-size: 12px;
+}
+
+.saved { color: var(--status-success); }
+.saving { color: var(--text-muted); }
+.error { color: var(--status-error); }
+
+.actions {
+  display: flex;
+  gap: 8px;
+}

@@ -1,0 +1,165 @@
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-2xl);
+  color: var(--text-muted);
+}
+
+.main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* ─── 카드 ─── */
+.card {
+  background: var(--ui-bg-card);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--ui-shadow);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.cardTitle {
+  font-family: var(--font-ko);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.cardDesc {
+  font-family: var(--font-ko);
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+/* ─── 글자수 카운터 ─── */
+.charCounter {
+  display: flex;
+  align-items: center;
+}
+
+.charCount {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.charWarning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.charError {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ─── 캡션 필드 ─── */
+.captionFields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.captionField label {
+  display: block;
+  font-family: var(--font-ko);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.textarea {
+  resize: vertical;
+  font-family: var(--font-ko);
+  min-height: 48px;
+}
+
+/* ─── 캡션 미리보기 ─── */
+.captionPreview {
+  background: var(--bg-app);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.captionText {
+  font-family: var(--font-ko);
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-secondary);
+}
+
+/* ─── 경고/에러 ─── */
+.warning {
+  padding: var(--space-sm) var(--space-md);
+  background: #fef3c7;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ko);
+  font-size: 12px;
+  color: #92400e;
+  margin-bottom: var(--space-md);
+}
+
+.error {
+  padding: var(--space-sm) var(--space-md);
+  background: #fee2e2;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ko);
+  font-size: 12px;
+  color: #991b1b;
+  margin-bottom: var(--space-md);
+}
+
+.captionActions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* ─── 배포 요약 ─── */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.summaryItem {
+  padding: var(--space-sm);
+  background: var(--bg-app);
+  border-radius: var(--radius-sm);
+}
+
+.summaryLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.summaryValue {
+  font-family: var(--font-ko);
+  font-size: 13px;
+  font-weight: 700;
+}

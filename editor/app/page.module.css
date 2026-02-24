@@ -1,0 +1,189 @@
+.main {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+/* ─── 히어로 ─── */
+.hero {
+  text-align: center;
+  padding: var(--space-2xl) 0 var(--space-xl);
+}
+
+.heroTitle {
+  font-family: var(--font-ko);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.heroDesc {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* ─── 탭 필터 ─── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tabActive {
+  color: var(--text-primary);
+  border-bottom-color: var(--text-primary);
+}
+
+.tabCount {
+  background: var(--ui-bg-hover);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+/* ─── 프로젝트 그리드 ─── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-md);
+}
+
+.projectCard {
+  background: var(--ui-bg-card);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: var(--ui-shadow);
+}
+
+.projectCard:hover {
+  border-color: var(--bg-kraft);
+  box-shadow: var(--ui-shadow-lg);
+  transform: translateY(-2px);
+}
+
+.cardThumb {
+  height: 120px;
+  background: linear-gradient(135deg, var(--bg-kraft), var(--bg-light-beige));
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: var(--space-sm);
+}
+
+.cardVol {
+  font-family: var(--font-en);
+  font-weight: 700;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 1px;
+}
+
+.cardBody {
+  padding: var(--space-md);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.cardTitle {
+  font-family: var(--font-ko);
+  font-size: 15px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardProduct {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.cardDate { flex: 1; }
+
+.cardSlides {
+  padding: 2px 6px;
+  background: var(--ui-bg-hover);
+  border-radius: 4px;
+}
+
+.cardDelete {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.projectCard:hover .cardDelete {
+  opacity: 1;
+}
+
+/* ─── 배지 ─── */
+.badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.badgeDraft { background: #f3f4f6; color: #6b7280; }
+.badgeEditing { background: #dbeafe; color: #1e40af; }
+.badgeCompleted { background: #dcfce7; color: #166534; }
+.badgePublished { background: #fef3c7; color: #92400e; }
+
+/* ─── 빈 상태 ─── */
+.empty {
+  text-align: center;
+  padding: var(--space-2xl) 0;
+  color: var(--text-muted);
+}
+
+.emptyIcon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: var(--space-md);
+}

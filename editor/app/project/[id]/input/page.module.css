@@ -1,0 +1,226 @@
+.main {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-lg);
+}
+
+.card {
+  width: 100%;
+  max-width: 640px;
+  background: var(--ui-bg-card);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--ui-shadow);
+}
+
+.stepTitle {
+  font-family: var(--font-ko);
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--ui-border);
+}
+
+/* ─── 섹션 ─── */
+.section {
+  margin-bottom: var(--space-xl);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-ko);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+/* ─── URL 입력 ─── */
+.urlRow {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.urlInput {
+  flex: 1;
+}
+
+.errorText {
+  margin-top: var(--space-xs);
+  font-size: 12px;
+  color: var(--status-error);
+}
+
+/* ─── 제품 정보 ─── */
+.infoCard {
+  background: var(--bg-app);
+  border: 1px dashed var(--ui-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.infoGrid > :first-child {
+  grid-column: 1 / -1;
+}
+
+.infoField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--space-sm);
+}
+
+.specTag {
+  background: var(--ui-bg-hover);
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ─── 제휴 링크 ─── */
+.modeToggle {
+  display: flex;
+  gap: 4px;
+}
+
+.modeBtn {
+  padding: 3px 10px;
+  border: 1px solid var(--ui-border);
+  background: none;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.modeBtnActive {
+  background: var(--text-primary);
+  color: #fff;
+  border-color: var(--text-primary);
+}
+
+.affiliateAuto {}
+
+.affiliateSuccess {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.affiliateError {
+  font-size: 12px;
+  color: var(--status-warning);
+}
+
+.affiliateHelp {
+  margin-top: 4px;
+}
+
+.affiliateHelp a {
+  color: var(--status-info);
+  font-size: 12px;
+}
+
+.loadingText {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.helpText {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+/* ─── 사진 업로드 ─── */
+.dropzone {
+  border: 2px dashed var(--ui-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2xl) var(--space-lg);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.dropzone:hover {
+  border-color: var(--bg-kraft);
+  background: rgba(196, 168, 130, 0.03);
+}
+
+.dropzoneHasPhoto {
+  padding: var(--space-md);
+}
+
+.dropzoneContent {
+  color: var(--text-muted);
+  font-family: var(--font-ko);
+  font-size: 14px;
+}
+
+.dropzoneIcon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: var(--space-sm);
+}
+
+.dropzoneHint {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: var(--space-xs);
+}
+
+/* ─── 사진 미리보기 ─── */
+.photoPreview {
+  position: relative;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.photoImg {
+  width: 100%;
+  aspect-ratio: 4/5;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.photoCropGuide {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--bg-kraft);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 6px;
+}
+
+.photoCropGuide span {
+  background: var(--bg-kraft);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
