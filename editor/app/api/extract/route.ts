@@ -7,6 +7,9 @@ import Anthropic from '@anthropic-ai/sdk';
  * Claude Haiku로 마크다운 파싱 → 제품 정보 + 카피라이팅 소구점 추출
  * ANTHROPIC_API_KEY 미설정 시 JSON-LD + OG 메타 정규식 폴백
  */
+// Vercel 함수 타임아웃: Firecrawl 5초 + Claude ~2초 여유 확보
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const { productUrl } = await req.json();
@@ -165,7 +168,7 @@ export async function POST(req: NextRequest) {
                     .join('\n');
                   return priceLines ? `[가격 정보 섹션]\n${priceLines}` : '';
                 })(),
-                markdown ? `[페이지 본문]\n${markdown.slice(0, 6000)}` : '',
+                markdown ? `[페이지 본문]\n${markdown.slice(0, 7500)}` : '',
               ].filter(Boolean).join('\n\n'),
             },
           ],
@@ -256,11 +259,9 @@ export async function POST(req: NextRequest) {
     }
     // 2단계: OG Commerce / 이커머스 메타 태그
     if (!price) price = extractPriceFromMeta(html);
-    // 3단계: HTML CSS 클래스 / data 속성 / 인라인 JSON 패턴
+    // 3단계: HTML CSS 클래스 / data 속성 패턴
     if (!price) price = extractPrice(html);
-    // 4단계: 인라인 <script> JSON 탐색
-    if (!price) price = extractPriceFromScripts(html);
-    // 5단계: Firecrawl 마크다운에서 가격 패턴 탐색
+    // 4단계: Firecrawl 마크다운에서 가격 패턴 탐색
     if (!price && markdown) {
       const pricePatterns = [
         /[₩￦]\s*([\d,]+)/,          // ₩29,900 형식
@@ -384,12 +385,6 @@ function extractPrice(html: string): string {
     /data-(?:sale-?)?price=["']([\d,]+)["']/,
     // itemprop price (Open Graph Commerce)
     /itemprop=["']price["'][^>]*content=["']([\d.]+)["']/,
-    // 인라인 JSON 패턴
-    /"salePrice":\s*([\d]{4,})/,
-    /"finalPrice":\s*([\d]{4,})/,
-    // 범용 class="*price*" 패턴
-    /class="[^"]*sale[^"]*price[^"]*"[^>]*>\s*([\d,]+)/,
-    /class="[^"]*price[^"]*"[^>]*>\s*([\d,]+)/,
     // 한국 원화 패턴
     /(\d{1,3}(?:,\d{3})+)\s*원/,
   ];
@@ -405,6 +400,9 @@ function extractPrice(html: string): string {
   return '';
 }
 
+// extractPriceFromScripts는 제거됨:
+// 쿠팡 인라인 JS의 ID/타임스탬프 등을 가격으로 오인 + 전체 스크립트 탐색으로 타임아웃 유발
+
 function extractPriceFromMeta(html: string): string {
   // Open Graph Commerce / 표준 이커머스 메타 태그
   const props = ['og:price:amount', 'product:price:amount', 'product:sale_price:amount'];
@@ -418,34 +416,6 @@ function extractPriceFromMeta(html: string): string {
   return '';
 }
 
-function extractPriceFromScripts(html: string): string {
-  // JSON-LD 외 인라인 <script> 에서 가격 JSON 탐색
-  const scriptRegex =
-    /<script(?![^>]*type=["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi;
-  const pricePatterns = [
-    /"salePrice":\s*([\d]{4,})/,
-    /"finalPrice":\s*([\d]{4,})/,
-    /"salesPrice":\s*([\d]{4,})/,
-    /"basePrice":\s*([\d]{4,})/,
-    /"price":\s*([\d]{4,})/,
-  ];
-
-  let match;
-  while ((match = scriptRegex.exec(html)) !== null) {
-    const content = match[1];
-    if (!content.includes('rice')) continue; // "price" / "Price" 포함 스크립트만
-    for (const pat of pricePatterns) {
-      const pm = content.match(pat);
-      if (pm) {
-        const num = Number(pm[1]);
-        if (num > 1000 && num < 100_000_000) {
-          return `₩${num.toLocaleString()}`;
-        }
-      }
-    }
-  }
-  return '';
-}
 
 function extractSpecs(html: string): string[] {
   const specs: string[] = [];
