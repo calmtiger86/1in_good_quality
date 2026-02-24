@@ -1,47 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { execSync } from 'child_process';
 
 /**
  * 쿠팡 제품 URL → 제품 정보 추출 API
- * curl을 사용하여 브라우저 수준 요청을 보냅니다.
+ * Firecrawl API로 HTML 수집 (봇 감지 우회)
  * JSON-LD (schema.org) 우선 파싱 + OG meta 폴백
  */
 export async function POST(req: NextRequest) {
   try {
     const { productUrl } = await req.json();
 
-    if (!productUrl || !productUrl.includes('coupang.com')) {
+    // URL 검증: 프로토콜 + 도메인 엄격 체크
+    if (
+      !productUrl ||
+      !/^https:\/\/www\.coupang\.com\//.test(productUrl)
+    ) {
       return NextResponse.json(
-        { error: '유효한 쿠팡 URL을 입력해 주세요.' },
+        { error: '유효한 쿠팡 URL을 입력해 주세요. (https://www.coupang.com/ 으로 시작해야 합니다)' },
         { status: 400 }
       );
     }
 
-    // ─── curl로 쿠팡 페이지 HTML 가져오기 ─────────────
+    if (!process.env.FIRECRAWL_API_KEY) {
+      return NextResponse.json(
+        { error: 'FIRECRAWL_API_KEY 환경변수가 설정되지 않았습니다.' },
+        { status: 503 }
+      );
+    }
+
+    // ─── Firecrawl API로 쿠팡 페이지 HTML 수집 ──────────
     let html: string;
     try {
-      // URL 내 특수문자 안전하게 처리
-      const safeUrl = productUrl.replace(/'/g, "'\\''");
-      const curlCmd = [
-        'curl', '-s', '-L', '--max-time', '15', '--compressed',
-        '-H', "'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'",
-        '-H', "'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'",
-        '-H', "'Accept-Language: ko-KR,ko;q=0.9'",
-        '-H', "'Referer: https://www.coupang.com/'",
-        '-H', "'sec-ch-ua: \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\"'",
-        '-H', "'sec-ch-ua-mobile: ?0'",
-        '-H', "'sec-ch-ua-platform: \"macOS\"'",
-        '-H', "'Sec-Fetch-Dest: document'",
-        '-H', "'Sec-Fetch-Mode: navigate'",
-        '-H', "'Sec-Fetch-Site: same-origin'",
-        `'${safeUrl}'`,
-      ].join(' ');
-
-      html = execSync(curlCmd, {
-        encoding: 'utf8',
-        maxBuffer: 10 * 1024 * 1024,
-        shell: '/bin/bash',
+      const fcRes = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: productUrl, formats: ['html'] }),
       });
+
+      if (!fcRes.ok) {
+        return NextResponse.json(
+          { error: '페이지를 가져올 수 없습니다. URL을 확인해 주세요.' },
+          { status: 502 }
+        );
+      }
+
+      const fcData = await fcRes.json();
+      html = fcData?.data?.html ?? '';
     } catch {
       return NextResponse.json(
         { error: '페이지를 가져올 수 없습니다. URL을 확인해 주세요.' },
@@ -49,10 +55,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Access Denied 감지
-    if (!html || html.length < 500 || html.includes('Access Denied')) {
+    if (!html || html.length < 500) {
       return NextResponse.json(
-        { error: '쿠팡 접근이 일시적으로 차단되었습니다. 잠시 후 다시 시도해 주세요.' },
+        { error: '제품 페이지를 파싱할 수 없습니다. 잠시 후 다시 시도해 주세요.' },
         { status: 429 }
       );
     }
