@@ -148,14 +148,24 @@ export async function POST(req: NextRequest) {
             {
               role: 'user',
               content: [
-                '다음은 쿠팡 제품 페이지 정보입니다. 제품 정보와 카드뉴스 카피라이팅 포인트를 추출해 주세요.',
+                '다음은 쿠팡 제품 페이지 정보입니다. 제품 정보와 카드뉴스 카피라이팅 포인트를 추출해 주세요. price 필드에는 반드시 ₩로 시작하는 판매가를 입력하세요.',
                 (extractMeta(html, 'og:title') || extractTitle(html))
                   ? `[페이지 제목] ${extractMeta(html, 'og:title') || extractTitle(html)}`
                   : '',
                 extractMeta(html, 'og:description')
                   ? `[페이지 설명] ${extractMeta(html, 'og:description')}`
                   : '',
-                markdown ? `[페이지 본문]\n${markdown.slice(0, 7500)}` : '',
+                // 가격 관련 줄만 선별해서 별도 컨텍스트로 제공
+                (() => {
+                  if (!markdown) return '';
+                  const priceLines = markdown
+                    .split('\n')
+                    .filter((l) => /[₩￦원]|가격|판매가|할인|price/i.test(l))
+                    .slice(0, 15)
+                    .join('\n');
+                  return priceLines ? `[가격 정보 섹션]\n${priceLines}` : '';
+                })(),
+                markdown ? `[페이지 본문]\n${markdown.slice(0, 6000)}` : '',
               ].filter(Boolean).join('\n\n'),
             },
           ],
@@ -234,6 +244,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── 가격 폴백 (항상 실행 — Claude가 name만 추출하고 price 누락 시 대응) ───
+    // 1단계: JSON-LD offers.price
     if (!price) {
       const jsonLdForPrice = extractJsonLd(html);
       if (jsonLdForPrice?.offers?.price) {
@@ -243,7 +254,13 @@ export async function POST(req: NextRequest) {
         originalPrice = `₩${Number(jsonLdForPrice.offers.priceSpecification.price).toLocaleString()}`;
       }
     }
+    // 2단계: OG Commerce / 이커머스 메타 태그
+    if (!price) price = extractPriceFromMeta(html);
+    // 3단계: HTML CSS 클래스 / data 속성 / 인라인 JSON 패턴
     if (!price) price = extractPrice(html);
+    // 4단계: 인라인 <script> JSON 탐색
+    if (!price) price = extractPriceFromScripts(html);
+    // 5단계: Firecrawl 마크다운에서 가격 패턴 탐색
     if (!price && markdown) {
       const pricePatterns = [
         /[₩￦]\s*([\d,]+)/,          // ₩29,900 형식
@@ -357,18 +374,74 @@ function extractTitle(html: string): string | null {
 
 function extractPrice(html: string): string {
   const patterns = [
-    /class="total-price"[^>]*>[^<]*<strong[^>]*>([\d,]+)<\/strong>/,
-    /class="prod-sale-price"[^>]*>[^<]*([\d,]+)원/,
-    /"price":\s*"?([\d,]+)"?/,
-    /class="price-value"[^>]*>([\d,]+)/,
-    /(\d{1,3}(?:,\d{3})+)원/,
+    // Coupang price-value (가장 정확한 패턴)
+    /class="price-value"[^>]*>\s*([\d,]+)/,
+    // total-price 컨테이너 — 중간 태그(<i class="currency"> 등) 허용
+    /class="total-price"[\s\S]{0,300}?<strong[^>]*>\s*([\d,]+)\s*<\/strong>/,
+    // prod-sale-price — 중간 태그 허용
+    /class="prod-sale-price"[\s\S]{0,200}?([\d,]+)\s*원/,
+    // data 속성
+    /data-(?:sale-?)?price=["']([\d,]+)["']/,
+    // itemprop price (Open Graph Commerce)
+    /itemprop=["']price["'][^>]*content=["']([\d.]+)["']/,
+    // 인라인 JSON 패턴
+    /"salePrice":\s*([\d]{4,})/,
+    /"finalPrice":\s*([\d]{4,})/,
+    // 범용 class="*price*" 패턴
+    /class="[^"]*sale[^"]*price[^"]*"[^>]*>\s*([\d,]+)/,
+    /class="[^"]*price[^"]*"[^>]*>\s*([\d,]+)/,
+    // 한국 원화 패턴
+    /(\d{1,3}(?:,\d{3})+)\s*원/,
   ];
 
   for (const pattern of patterns) {
-    const match = html.match(pattern);
-    if (match) {
-      const num = match[1].replace(/,/g, '');
-      return `₩${Number(num).toLocaleString()}`;
+    const m = html.match(pattern);
+    if (m) {
+      const raw = m[1].replace(/,/g, '').split('.')[0]; // 쉼표·소수점 제거
+      const num = Number(raw);
+      if (num > 100) return `₩${num.toLocaleString()}`;
+    }
+  }
+  return '';
+}
+
+function extractPriceFromMeta(html: string): string {
+  // Open Graph Commerce / 표준 이커머스 메타 태그
+  const props = ['og:price:amount', 'product:price:amount', 'product:sale_price:amount'];
+  for (const prop of props) {
+    const val = extractMeta(html, prop);
+    if (val) {
+      const num = Math.round(Number(val));
+      if (num > 100) return `₩${num.toLocaleString()}`;
+    }
+  }
+  return '';
+}
+
+function extractPriceFromScripts(html: string): string {
+  // JSON-LD 외 인라인 <script> 에서 가격 JSON 탐색
+  const scriptRegex =
+    /<script(?![^>]*type=["']application\/ld\+json["'])[^>]*>([\s\S]*?)<\/script>/gi;
+  const pricePatterns = [
+    /"salePrice":\s*([\d]{4,})/,
+    /"finalPrice":\s*([\d]{4,})/,
+    /"salesPrice":\s*([\d]{4,})/,
+    /"basePrice":\s*([\d]{4,})/,
+    /"price":\s*([\d]{4,})/,
+  ];
+
+  let match;
+  while ((match = scriptRegex.exec(html)) !== null) {
+    const content = match[1];
+    if (!content.includes('rice')) continue; // "price" / "Price" 포함 스크립트만
+    for (const pat of pricePatterns) {
+      const pm = content.match(pat);
+      if (pm) {
+        const num = Number(pm[1]);
+        if (num > 1000 && num < 100_000_000) {
+          return `₩${num.toLocaleString()}`;
+        }
+      }
     }
   }
   return '';
