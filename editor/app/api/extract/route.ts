@@ -3,16 +3,14 @@ import Anthropic from '@anthropic-ai/sdk';
 
 /**
  * 쿠팡 제품 URL → 제품 정보 추출 API
- *
- * 데이터 수집 순서 (병렬):
- *   1차) 직접 fetch (한국어 브라우저 헤더) → SSR HTML — JSON-LD, OG 태그 포함
- *   2차) Jina AI Reader (r.jina.ai) → clean markdown — Claude 분석용
- *   3차) Firecrawl (FIRECRAWL_API_KEY 설정 시만) — 위 두 방법 모두 실패 시 폴백
- *
+ * Firecrawl API로 HTML 수집 (봇 감지 우회, JS 렌더링 5초 대기)
  * Claude Haiku로 마크다운 파싱 → 제품 정보 + 카피라이팅 소구점 추출
  * ANTHROPIC_API_KEY 미설정 시 JSON-LD + OG 메타 정규식 폴백
+ *
+ * 주의: 쿠팡은 Akamai CDN으로 쿠키/세션 없는 서버 요청을 403 차단함.
+ * Firecrawl만이 헤드리스 브라우저 + 쿠키 관리로 이를 우회할 수 있음.
  */
-// Vercel 함수 타임아웃: 직접 fetch 10s + Jina 20s 병렬 + Claude ~2s 여유 확보
+// Vercel 함수 타임아웃: Firecrawl 5초 + Claude ~2초 여유 확보
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
@@ -30,54 +28,50 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ─── 1차: 직접 fetch + Jina AI Reader 병렬 실행 ───────
+    if (!process.env.FIRECRAWL_API_KEY) {
+      return NextResponse.json(
+        { error: 'FIRECRAWL_API_KEY 환경변수가 설정되지 않았습니다.' },
+        { status: 503 }
+      );
+    }
+
+    // ─── Firecrawl API로 쿠팡 페이지 수집 ──────────────
     let html = '';
     let markdown = '';
+    try {
+      const fcRes = await fetch('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: productUrl,
+          formats: ['rawHtml', 'markdown'],
+          waitFor: 5000,           // JS 렌더링 5초 대기 (쿠팡 가격 렌더링)
+          onlyMainContent: false,  // 사이드바 가격/스펙 포함
+        }),
+      });
 
-    const [htmlResult, mdResult] = await Promise.allSettled([
-      fetchCoupangHtml(productUrl),
-      fetchJinaMarkdown(productUrl),
-    ]);
-
-    if (htmlResult.status === 'fulfilled') {
-      const raw = htmlResult.value;
-      html = isBotBlocked(raw) ? '' : raw;
-    }
-    if (mdResult.status === 'fulfilled') {
-      markdown = mdResult.value;
-    }
-
-    // ─── 2차: 직접 fetch 실패 시 Firecrawl (API 키 있을 때만) ───
-    if (!html && !markdown && process.env.FIRECRAWL_API_KEY) {
-      try {
-        const fcRes = await fetch('https://api.firecrawl.dev/v1/scrape', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: productUrl,
-            formats: ['rawHtml', 'markdown'],
-            waitFor: 5000,
-            onlyMainContent: false,
-          }),
-        });
-
-        if (fcRes.ok) {
-          const fcData = await fcRes.json();
-          const rawHtml = fcData?.data?.rawHtml ?? '';
-          const fcMd    = fcData?.data?.markdown ?? '';
-          html     = isBotBlocked(rawHtml) ? '' : rawHtml;
-          markdown = markdown || fcMd;
-        }
-      } catch {
-        // Firecrawl 실패 무시 (이미 폴백 단계)
+      if (!fcRes.ok) {
+        return NextResponse.json(
+          { error: '페이지를 가져올 수 없습니다. URL을 확인해 주세요.' },
+          { status: 502 }
+        );
       }
+
+      const fcData = await fcRes.json();
+      html     = fcData?.data?.rawHtml  ?? '';
+      markdown = fcData?.data?.markdown ?? '';
+    } catch {
+      return NextResponse.json(
+        { error: '페이지를 가져올 수 없습니다. URL을 확인해 주세요.' },
+        { status: 502 }
+      );
     }
 
-    // 유효 데이터 체크
-    if (!html && !markdown) {
+    // markdown이 있으면 rawHtml이 짧아도 진행 (봇 차단 시 rawHtml 비어있을 수 있음)
+    if (!markdown && (!html || html.length < 500)) {
       return NextResponse.json(
         { error: '제품 페이지를 파싱할 수 없습니다. 잠시 후 다시 시도해 주세요.' },
         { status: 429 }
@@ -334,60 +328,6 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// ─── 데이터 수집 함수 ──────────────────────────
-
-/**
- * 직접 fetch — 한국어 브라우저 헤더 (과거 curl과 동일 원리, shell injection 없음)
- * 쿠팡 SSR HTML에는 JSON-LD, OG 태그가 포함되어 있음
- */
-async function fetchCoupangHtml(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-      'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Referer': 'https://www.coupang.com/',
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-    },
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.text();
-}
-
-/**
- * Jina AI Reader — 무료, API 키 불필요 (20 RPM)
- * 페이지를 LLM 친화적 마크다운으로 변환
- */
-async function fetchJinaMarkdown(url: string): Promise<string> {
-  const res = await fetch(`https://r.jina.ai/${url}`, {
-    headers: {
-      'Accept': 'text/plain',
-      'X-Return-Format': 'markdown',
-    },
-    signal: AbortSignal.timeout(25_000),
-  });
-  if (!res.ok) throw new Error(`Jina ${res.status}`);
-  return res.text();
-}
-
-/**
- * 봇 차단 페이지 감지 — Cloudflare 챌린지, 로그인 리다이렉트 등
- * 차단된 경우 html을 빈 문자열로 처리하여 추출 오염 방지
- */
-function isBotBlocked(html: string): boolean {
-  if (html.length < 1000) return true;
-  // Cloudflare 챌린지 페이지 시그니처
-  if (/cf-browser-verification|__cf_chl|Checking your browser/i.test(html)) return true;
-  // 쿠팡 로그인 리다이렉트
-  if (/member\.coupang\.com.*login/i.test(html)) return true;
-  // 쿠팡 제품 페이지 필수 시그니처가 없으면 차단으로 간주
-  if (!/og:title|ld\+json|coupang/i.test(html)) return true;
-  return false;
 }
 
 // ─── 헬퍼 함수 ────────────────────────────────
