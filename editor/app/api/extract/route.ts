@@ -185,7 +185,9 @@ export async function POST(req: NextRequest) {
           name           = String(inp.name           || '');
           price          = String(inp.price          || '');
           originalPrice  = String(inp.originalPrice  || '');
-          // Claude가 가격을 못 찾을 때 "<UNKNOWN>", "N/A" 등 플레이스홀더를 반환하는 경우 제거
+          // Claude가 못 찾을 때 "<UNKNOWN>", "N/A", "없음" 등 플레이스홀더를 반환하는 경우 비워둠
+          // → if (!name) 정규식 폴백이 이어서 실행됨
+          if (name && /^[<\[(]?(unknown|n\/?a|없음|미상|모름)[>\])]?$/i.test(name.trim())) name = '';
           // 유효한 가격은 반드시 ₩로 시작해야 함
           if (price && !/^₩[\d,]+/.test(price)) price = '';
           if (originalPrice && !/^₩[\d,]+/.test(originalPrice)) originalPrice = '';
@@ -240,7 +242,9 @@ export async function POST(req: NextRequest) {
         const priceMatch = markdown.match(/[₩￦]?\s?([\d,]{4,})\s*원?/);
         if (priceMatch) {
           const digits = priceMatch[1].replace(/,/g, '');
-          price = `₩${Number(digits).toLocaleString()}`;
+          const num = Number(digits);
+          // 1,000원 ~ 9,999,999원 범위만 허용 (제품 ID 등 큰 숫자 제외)
+          if (num > 1000 && num < 10_000_000) price = `₩${num.toLocaleString()}`;
         }
       }
 
@@ -274,8 +278,10 @@ export async function POST(req: NextRequest) {
         const m = markdown.match(pat);
         if (m) {
           const digits = m[1].replace(/,/g, '');
-          if (Number(digits) > 1000) { // 1,000원 이상만 (노이즈 제거)
-            price = `₩${Number(digits).toLocaleString()}`;
+          const num = Number(digits);
+          // 1,000원 ~ 9,999,999원 범위만 허용 (제품 ID 등 큰 숫자 제외)
+          if (num > 1000 && num < 10_000_000) {
+            price = `₩${num.toLocaleString()}`;
             break;
           }
         }
